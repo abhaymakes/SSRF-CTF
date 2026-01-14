@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <title>URLView</title>
+</head>
+
+<body class="min-h-screen bg-black text-green-400 font-mono flex items-center justify-center">
+
+    <div
+        class="w-full max-w-3xl border border-green-500/40 rounded-lg shadow-[0_0_30px_rgba(34,197,94,0.25)] p-6 bg-black">
+
+        <div class="mb-6">
+            <h1 class="text-3xl font-bold tracking-widest text-green-400">
+                URLVIEW
+            </h1>
+            <p class="text-sm text-green-500 mt-2">
+                ▸ Safely inspect suspicious links without opening them
+            </p>
+        </div>
+
+        <div class="flex gap-3 mb-4">
+            <input type="text" id="target-url" placeholder="https://suspicious-link.example" class="flex-1 bg-black border border-green-500/40 rounded px-3 py-2
+               text-green-300 placeholder-green-700
+               focus:outline-none focus:ring-2 focus:ring-green-500" required />
+
+            <button id="submit-button" onclick="sendRequest()" class="px-4 py-2 border border-green-500 rounded
+               text-green-400 hover:bg-green-500 hover:text-black
+               transition duration-200 shadow-[0_0_10px_rgba(34,197,94,0.4)]">
+                RUN
+            </button>
+        </div>
+
+        <div class="mb-4">
+            <label class="text-xs text-green-600 tracking-widest">
+                ▸ RESPONSE BODY
+            </label>
+            <textarea id="preview" readonly class="w-full h-64 mt-2 bg-black border border-green-500/40 rounded
+               text-green-300 p-3 text-sm resize-none
+               focus:outline-none focus:ring-2 focus:ring-green-500
+               shadow-inner" placeholder="Waiting for payload..."></textarea>
+        </div>
+
+        <div class="flex gap-3 mb-4">
+            <input type="text" id="flag" placeholder="flag{flag}" class="flex-1 bg-black border border-green-500/40 rounded px-3 py-2
+               text-green-300 placeholder-green-700
+               focus:outline-none focus:ring-2 focus:ring-green-500" required />
+
+            <button id="submit-flag-button" onclick="sendFlag()" class="px-4 py-2 border border-green-500 rounded
+               text-green-400 hover:bg-green-500 hover:text-black
+               transition duration-200 shadow-[0_0_10px_rgba(34,197,94,0.4)]">
+                SUBMIT FLAG
+            </button>
+        </div>
+
+        <div class="mt-4 text-xs text-green-700 flex justify-between">
+            <span>STATUS: READY</span>
+            <span>LOCALHOST :: 127.0.0.1</span>
+        </div>
+
+    </div>
+
+    <script>
+
+        function containsAny(array, data) {
+            return array.some(item => data.includes(item));
+        }
+
+        function sendRequest() {
+
+
+
+            let url = document.getElementById('target-url').value;
+
+            let blockedDomains = ['localhost', '127.0.0.1', '0.0.0.0', 'webhook', 'interact', 'requestbin']
+
+
+            if (containsAny(blockedDomains, url)) {
+                alert('Blocked domain detected!')
+                return;
+            }
+
+            let previewElement = document.getElementById('preview');
+
+            previewElement.value = "[+] Fetching remote content...\n";
+
+            fetch('http://127.0.0.1:12345/api/get_preview', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ targeturl: url })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    previewElement.value = data.body_html || "[!] Empty response";
+                })
+                .catch(err => {
+                    previewElement.value = "[!] ERROR:\n" + err;
+                });
+        }
+
+        function sendFlag() {
+            let flag = document.getElementById('flag').value;
+
+            let previewElement = document.getElementById('preview');
+
+            previewElement.value = "[+] Fetching remote content...\n";
+
+            fetch('http://127.0.0.1:12345/verify', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ flag: flag })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    previewElement.value = data.body_html || "[!] Empty response";
+                })
+                .catch(err => {
+                    previewElement.value = "[!] ERROR:\n" + err;
+                });
+        }
+    </script>
+
+</body>
+
+</html>
